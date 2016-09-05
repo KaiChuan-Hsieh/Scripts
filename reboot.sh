@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 count=0
 
@@ -21,14 +21,25 @@ do
         sleep 10
         res=$(adb shell getprop sys.boot_completed)
     done
+    echo "############################"
+    echo "#### CHECK BOOT UP LOGS ####"
+    echo "############################"
+    adb root
+    adb wait-for-device
+    adb shell cat /data/logs/aplog > aplog_tmp.txt
+    res=$(grep "Error temp mounting decrypted block device" aplog_tmp.txt)
+    if [ ! -z "$res" ]; then
+        echo "Hit blocking situation"
+        break
+    fi
     echo "########################################"
-    echo "#### BOOT COMPLETED WAIT 20 SECONDS ####"
+    echo "#### BOOT COMPLETED WAIT 10 SECONDS ####"
     echo "########################################"
-    sleep 20
+    sleep 10
     echo "#######################"
     echo "#### REBOOT DEVICE ####"
     echo "#######################"
-    adb shell setprop sys.powerctl reboot
+    adb reboot
     echo "##########################"
     echo "#### SLEEP 20 SECONDS ####"
     echo "##########################"
