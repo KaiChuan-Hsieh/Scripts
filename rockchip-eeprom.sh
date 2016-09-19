@@ -11,6 +11,36 @@ function usage {
     exit 1
 }
 
+function gpio {
+    GPIO=$1
+    ACTION=$2
+
+    case $ACTION in
+    acquire)
+        echo $GPIO > /sys/class/gpio/export
+        ;;
+    release)
+        echo $GPIO > /sys/class/gpio/unexport
+        ;;
+    output)
+        echo out > /sys/class/gpio/gpio$GPIO/direction
+        ;;
+    input)
+        echo in > /sys/class/gpio/gpio$GPIO/direction
+        ;;
+    high)
+        echo 1 > /sys/class/gpio/gpio$GPIO/value
+        ;;
+    low)
+        echo 0 > /sys/class/gpio/gpio$GPIO/value
+        ;;
+    *)
+        echo "Unsupported Parameter"
+        ;;
+    esac
+    sleep 1
+}
+
 function read_ether {
     xxd -s 0x0 -l 6 -g 1 $FILEPATH | awk '{ print $2$3$4$5$6$7 }'
     exit 1
@@ -24,6 +54,8 @@ function write_ether {
     fi
 
     touch mac.bin
+    gpio 6 acquire
+    gpio 6 output
 
     idx=0
     while [ $idx -lt 12 ];
@@ -34,6 +66,8 @@ function write_ether {
 
     dd if=mac.bin of=$FILEPATH bs=1 count=6 > /dev/null 2>&1
     rm mac.bin
+    gpio 6 input
+    gpio 6 release
 
     exit 1
 }
@@ -64,6 +98,8 @@ function write_sn {
     fi
 
     touch sn.bin
+    gpio 6 acquire
+    gpio 6 output
 
     idx=0
     while [ $idx -lt 12 ];
@@ -74,10 +110,10 @@ function write_sn {
         idx=$((idx+1))
     done
 
-    echo $data
-
     dd if=sn.bin of=$FILEPATH bs=1 count=12 seek=6 > /dev/null 2>&1
     rm sn.bin
+    gpio 6 input
+    gpio 6 release
 
     exit 1
 }
