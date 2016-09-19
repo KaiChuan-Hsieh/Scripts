@@ -94,7 +94,6 @@ if [ "$#" -eq 1 ]; then
     *)
         echo "Unsupported parameter"
         usage
-        exit 1
         ;;
     esac
 fi
@@ -111,7 +110,6 @@ if [ "$#" -eq 2 ]; then
     *)
         echo "Unsupported parameters"
         usage
-        exit 1
         ;;
     esac
 fi
