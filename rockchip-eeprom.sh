@@ -114,11 +114,11 @@ function write_sn {
         exit 1
     fi
 
-    dd if=/dev/zero of=$FILEPATH bs=1 count=20 seek=6 > /dev/null 2>&1
-
     touch sn.bin
     gpio 6 acquire
     gpio 6 output
+
+    dd if=/dev/zero of=$FILEPATH bs=1 count=20 seek=6 > /dev/null 2>&1
 
     idx=0
     while [ $idx -lt $SNLEN ];
