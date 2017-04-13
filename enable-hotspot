@@ -1,0 +1,45 @@
+#!/bin/bash
+
+function enable_hotspot() {
+    curtime=$(date +%s)
+    nexttime=$(date +%s --date 'now + 2 minutes')
+    netpath="/sys/class/net"
+    /usr/local/bin/hostapd -b phy0:/etc/hostapd/ath10k-0.conf -b phy0:/etc/hostapd/ath10k-1.conf -b phy0:/etc/hostapd/ath10k-2.conf -B
+
+    while [ $curtime -lt $nexttime ]
+    do
+        if [ -e "$netpath/wlan0" ] && [ -e "$netpath/wlan0-1" ] && [ -e "$netpath/wlan0-2" ]; then
+            echo "interface created"
+            brctl addif br0 wlan0-1 wlan0-2
+            break
+        fi
+        sleep 5
+        curtime=$(date +%s)
+    done
+}
+
+brctl addbr br0
+ip link set enp0 up
+ip link set br0 up
+brctl addif br0 enp0
+dhclient br0
+
+while [ 1 -lt 2 ]
+do
+    state=$(ps -aux | grep hostapd | awk '{ print $11 }')
+    running="false"
+    for var in $state
+    do
+        if [ "$var" = "/usr/local/bin/hostapd" ]; then
+            echo "hostapd is running"
+            running="true"
+            break
+        fi
+    done
+
+    if [ "$running" = "false" ]; then
+        echo "no hostapd, restart hostapd"
+        enable_hotspot
+    fi
+    sleep 10
+done

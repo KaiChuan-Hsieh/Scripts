@@ -1,0 +1,30 @@
+#!/bin/bash
+
+echo "Shutdown device after 60 seconds"
+dmesg > /tmp/wificonf/ath.log
+sleep 60
+
+if [ ! -e /sys/class/net/wlan0 ]; then
+    echo "wlan0 init failed, stop"
+    dmesg > /tmp/wificonf/reboot.log
+    return
+fi
+
+if [ ! -e /sys/class/net/wlan1 ]; then
+    echo "wlan1 init failed, stop"
+    dmesg > /tmp/wificonf/reboot.log
+    return
+fi
+
+ret=$(ps -aux | grep fcapsd | awk '{ print $11 }')
+for var in $ret
+do
+    if [ $var = "fcapsd" ]; then
+        echo "Prepare cold boot test"
+        cat /sys/class/rtc/rtc0/wakealarm
+        echo 0 > /sys/class/rtc/rtc0/wakealarm
+        echo $(date +%s --date 'now + 1 minutes') > /sys/class/rtc/rtc0/wakealarm
+        cat /sys/class/rtc/rtc0/wakealarm
+        shutdown -h now
+    fi
+done
